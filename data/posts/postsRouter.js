@@ -103,9 +103,65 @@ router.put(`/:id`, (req, res) => {
 
 });
 
+router.delete(`/:id`, (req, res) => {
+  const { id } = req.params;
+
+  db.remove(id)
+    .then(removed => {
+      console.log(removed);
+      if(removed) {
+        res
+          .status(204)
+          .json({message: "Entry Deleted."})
+          .end()
+      } else {
+        res
+          .status(404)
+          .json({message: "The post with the specified ID does not exist."})
+      }
+    })
+    .catch(error => {
+      console.log("delete", error);
+      res
+        .status(500)
+        .json({error: "The post could not be removed."})
+    })
+});
+
 // **** /api/posts/:id ****
 
 
+
+// **** /api/posts/:id/comments ****
+
+router.get(`/:id/comments`, (req, res) => {
+  const {id} = req.params;
+  db.findById(id)
+    .then(([post]) => {
+      if (post) {
+        db.findPostComments(id)
+          .then(comments => {
+            res
+              .status(200)
+              .json(comments)
+          })
+      } else {
+        res
+          .status(404)
+          .json({message: "The post with the specified ID does not exist."})
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      res
+        .status(500)
+        .json({error: "The comments information could not be retrieved."})
+    })
+
+});
+
+
+// **** /api/posts/:id/comments ****
 
 
 module.exports = router;
