@@ -3,6 +3,9 @@ const db = require('../db');
 
 const router = express.Router();
 
+
+// **** /api/posts ****
+
 router.get('/', (req, res) => {
   db.find()
     .then(posts => {
@@ -18,12 +21,40 @@ router.get('/', (req, res) => {
     });
 });
 
+router.post('/', (req, res) => {
+  const {title, contents} = req.body;
+  if (!title || !contents) {
+    return res
+      .status(400)
+      .json({errorMessage: "Please provide title and contents for the post."})
+  }
+  db.insert({title, contents})
+    .then(({id}) => {
+      db.findById(id)
+        .then(([post]) => {
+          console.log(post);
+          res
+            .status(201)
+            .json(post)
+        })
+    })
+    .catch(error => {
+      console.log(error);
+      res
+        .status(500)
+        .json({error: "There was an error while savint he post to the database."})
+    })
+});
+
+// **** /api/posts ****
+
+
 router.get(`/:id`, (req, res) => {
   const { id } = req.params;
   db.findById(id)
-    .then(post => {
+    .then(([post]) => {
       console.log(post);
-      if(post.length) {
+      if(post) {
         res
           .status(200)
           .json(post)
