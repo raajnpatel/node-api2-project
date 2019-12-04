@@ -196,23 +196,15 @@ router.get('/:post_id/comments', (req, res) => {
     })
 });
 
-
 router.post('/:post_id/comments', (req, res) => {
-  const { post_id } = req.params;
-  const { text } = req.body;
-  if(text === "" || typeof text !== "string"){
-    return(
-      res
-        .status(400)
-        .json({errorMessage: "Please provide text for the comment."})
-    )
-  }
-
+  const {post_id} = req.params;
+  const {text} = req.body;
   db.insertComment({text, post_id})
     .then(({id: comment_id}) => {
+      console.log(comment_id);
       db.findCommentById(comment_id)
         .then(([comment]) => {
-          if(comment){
+          if (comment) {
             res
               .status(200)
               .json(comment)
@@ -222,14 +214,47 @@ router.post('/:post_id/comments', (req, res) => {
               .json({message: "The post with the specified ID does not exist."})
           }
         })
-    })
-    .catch(error =>  {
-      console.log(error);
-      res
-        .status(500)
-        .json({error: "There was an error while saving the comment to the database."})
+        .catch(error => {
+          console.log(error);
+          res
+            .status(500)
+            .json({error: "The comments information could not be retrieved."})
+        })
     })
 });
+
+
+// router.post('/:post_id/comments', (req, res) => {
+//   const {post_id} = req.params;
+//   const {text} = req.body;
+//   if (text === "" || typeof text !== "string") {
+//     return (
+//       res
+//         .status(400)
+//         .json({errorMessage: "Please provide text for the comment."})
+//     )
+//   }
+//
+//   db.insertComment({text, post_id})
+//     .then(({id: comment_id}) => {
+//       console.log(comment_id);
+//       if (comment_id) {
+//         res
+//           .status(200)
+//           .json(comment_id)
+//       } else {
+//         res
+//           .status(404)
+//           .json({message: "The post with the specified ID does not exist."})
+//       }
+//     })
+//     .catch(error => {
+//       console.log(error);
+//       res
+//         .status(500)
+//         .json({error: "There was an error while saving the comment to the database."})
+//     })
+// });
 
 // **** /api/posts/:id/comments ****
 
