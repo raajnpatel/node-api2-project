@@ -4,23 +4,23 @@ const db = require('../db');
 const router = express.Router();
 
 
-function getPost(id, res){
-  return(
-    db.findById(id)
-      .then(([post]) => {
-        console.log(post);
-        if(post) {
-          res
-            .status(201)
-            .json(post)
-        } else {
-          res
-            .status(404)
-            .json({message: "The post with the specified ID does not exist."})
-        }
-      })
-  )
-}
+// function getPost(id, res){
+//   return(
+//     db.findById(id)
+//       .then(([post]) => {
+//         console.log(post);
+//         if(post) {
+//           res
+//             .status(201)
+//             .json(post)
+//         } else {
+//           res
+//             .status(404)
+//             .json({message: "The post with the specified ID does not exist."})
+//         }
+//       })
+//   )
+// }
 
 // **** /api/posts ****
 
@@ -48,7 +48,19 @@ router.post('/', (req, res) => {
   }
   db.insert({title, contents})
     .then(({id}) => {
-      getPost(id, res)
+      db.findById(id)
+        .then(([post]) => {
+          console.log(post);
+          if(post) {
+            res
+              .status(201)
+              .json(post)
+          } else {
+            res
+              .status(404)
+              .json({message: "The post with the specified ID does not exist."})
+          }
+        })
     })
     .catch(error => {
       console.log(error);
@@ -66,7 +78,19 @@ router.post('/', (req, res) => {
 
 router.get(`/:id`, (req, res) => {
   const { id } = req.params;
-    getPost(id)
+  db.findById(id)
+    .then(([post]) => {
+      console.log(post);
+      if(post) {
+        res
+          .status(201)
+          .json(post)
+      } else {
+        res
+          .status(404)
+          .json({message: "The post with the specified ID does not exist."})
+      }
+    })
     .catch(error => {
       console.log(error);
       res
@@ -87,7 +111,19 @@ router.put(`/:id`, (req, res) => {
     .then(updated => {
       if(updated) {
       console.log(updated);
-      getPost(id, res)
+        db.findById(id)
+          .then(([post]) => {
+            console.log(post);
+            if(post) {
+              res
+                .status(201)
+                .json(post)
+            } else {
+              res
+                .status(404)
+                .json({message: "The post with the specified ID does not exist."})
+            }
+          })
     } else {
       res
         .status(404)
@@ -134,12 +170,13 @@ router.delete(`/:id`, (req, res) => {
 
 // **** /api/posts/:id/comments ****
 
-router.get(`/:id/comments`, (req, res) => {
-  const {id} = req.params;
-  db.findById(id)
+router.get('/:post_id/comments', (req, res) => {
+  const { post_id } = req.params;
+  db.findById(post_id)
     .then(([post]) => {
-      if (post) {
-        db.findPostComments(id)
+      console.log(post);
+      if(post){
+        db.findPostComments(post_id)
           .then(comments => {
             res
               .status(200)
@@ -157,9 +194,42 @@ router.get(`/:id/comments`, (req, res) => {
         .status(500)
         .json({error: "The comments information could not be retrieved."})
     })
-
 });
 
+
+router.post('/:post_id/comments', (req, res) => {
+  const { post_id } = req.params;
+  const { text } = req.body;
+  if(text === "" || typeof text !== "string"){
+    return(
+      res
+        .status(400)
+        .json({errorMessage: "Please provide text for the comment."})
+    )
+  }
+
+  db.insertComment({text, post_id})
+    .then(({id: comment_id}) => {
+      db.findCommentById(comment_id)
+        .then(([comment]) => {
+          if(comment){
+            res
+              .status(200)
+              .json(comment)
+          } else {
+            res
+              .status(404)
+              .json({message: "The post with the specified ID does not exist."})
+          }
+        })
+    })
+    .catch(error =>  {
+      console.log(error);
+      res
+        .status(500)
+        .json({error: "There was an error while saving the comment to the database."})
+    })
+});
 
 // **** /api/posts/:id/comments ****
 
